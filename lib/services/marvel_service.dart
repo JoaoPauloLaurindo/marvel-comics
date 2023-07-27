@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:marvel_app/services/dto/response/base_response_dto.dart';
 import 'package:marvel_app/services/http_service.dart';
 
 import './dto/response/comic_response_dto.dart';
@@ -17,15 +18,15 @@ class MarvelService implements IMarvelService {
   Future<List<ComicResponseDto>> getComics() async {
     final List<ComicResponseDto> listComics = [];
     final response = await client.get(endpoint: '/comics');
-    print(response.body);
 
-    if (response == 200) {
+    if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
+      final bodyParsed = BaseResponseDto.fromMap(body['data']);
 
-      body.data['results'].map((item) {
+      bodyParsed.results.map((item) {
         final ComicResponseDto comic = ComicResponseDto.fromMap(item);
         listComics.add(comic);
-      });
+      }).toList();
     }
 
     return listComics;
