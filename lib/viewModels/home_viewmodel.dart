@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marvel_app/views/comic_detail_view.dart';
 import '../models/home_model.dart';
 import '../services/marvel_service.dart';
 
@@ -21,5 +22,13 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e) {
       throw 'Houve um erro!';
     }
+  }
+
+  navigateToDetail(BuildContext context, int idComic) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ComicDetailView(idComic: idComic),
+      ),
+    );
   }
 }

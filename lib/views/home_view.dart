@@ -22,6 +22,12 @@ class _HomeViewState extends State<HomeView> {
   }
 
   @override
+  void dispose() {
+    viewModel.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -33,38 +39,49 @@ class _HomeViewState extends State<HomeView> {
           valueListenable: viewModel.homeModel.listComics,
           builder: (context, List<ComicResponseDto> item, _) {
             final comics = viewModel.homeModel.listComics.value;
+            if (comics.isEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: Colors.red,
+                ),
+              );
+            }
             return ListView.builder(
               itemCount: comics.length,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                      image: DecorationImage(
-                        image: NetworkImage(comics[index].thumbnail.fullUrl),
-                        fit: BoxFit.cover,
+                  child: InkWell(
+                    onTap: () =>
+                        viewModel.navigateToDetail(context, comics[index].id),
+                    child: Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0),
+                        image: DecorationImage(
+                          image: NetworkImage(comics[index].thumbnail.fullUrl),
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8.0),
-                            color: Colors.white,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              comics[index].title,
-                              style: const TextStyle(color: Colors.black),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8.0),
+                              color: Colors.white,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                comics[index].title,
+                                style: const TextStyle(color: Colors.black),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
