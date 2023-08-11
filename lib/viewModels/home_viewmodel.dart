@@ -15,13 +15,36 @@ class HomeViewModel extends ChangeNotifier {
 
   Future loadComics() async {
     try {
+      homeModel.isBusy.value = true;
       var response = await marvelService.getComics();
-      homeModel.listComics.value = response;
+      homeModel.listComics.value = homeModel.listFilterComics.value = response;
+      homeModel.isBusy.value = false;
 
       notifyListeners();
     } catch (e) {
       throw 'Houve um erro!';
     }
+  }
+
+  Future filterList(String search) async {
+    try {
+      homeModel.isBusy.value = true;
+      final filter = homeModel.listComics.value
+          .where((element) => element.title.contains(search))
+          .toList();
+      homeModel.listFilterComics.value = filter;
+      homeModel.isBusy.value = false;
+
+      notifyListeners();
+    } catch (e) {
+      throw 'Houve um erro: $e';
+    }
+  }
+
+  refreshList() {
+    homeModel.listFilterComics.value = homeModel.listComics.value;
+
+    notifyListeners();
   }
 
   navigateToDetail(BuildContext context, int idComic) {
