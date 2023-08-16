@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:marvel_app/services/marvel_service.dart';
 
-import '../models/comic_detail_model.dart';
+import 'comic_detail_model.dart';
 
 class ComicDetailViewModel extends ChangeNotifier {
   late IMarvelService marvelService;
@@ -19,8 +19,8 @@ class ComicDetailViewModel extends ChangeNotifier {
 
       var response = await marvelService.getComicById(idComic);
       comicModel.comic.value = response;
-
       comicModel.isBusy.value = false;
+
       notifyListeners();
     } catch (e) {
       throw 'Houve um erro!';

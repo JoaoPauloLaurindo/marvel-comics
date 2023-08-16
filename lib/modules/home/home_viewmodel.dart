@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:marvel_app/views/comic_detail_view.dart';
-import '../models/home_model.dart';
-import '../services/marvel_service.dart';
+import 'package:marvel_app/modules/comic-detail/comic_detail_parameter.dart';
+import 'home_model.dart';
+import '../../services/marvel_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   late IMarvelService marvelService;
@@ -47,11 +47,11 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  navigateToDetail(BuildContext context, int idComic) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ComicDetailView(idComic: idComic),
-      ),
+  navigateToDetail(BuildContext context, int idComic) async {
+    await Navigator.pushNamed(
+      context,
+      '/comic-detail',
+      arguments: ComicDetailParameter(idComic),
     );
   }
 }

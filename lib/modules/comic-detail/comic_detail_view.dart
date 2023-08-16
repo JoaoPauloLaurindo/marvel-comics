@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:marvel_app/modules/comic-detail/comic_detail_parameter.dart';
 import 'package:marvel_app/services/http_service.dart';
 import 'package:marvel_app/services/marvel_service.dart';
-import 'package:marvel_app/viewModels/comic_detail_viewModel.dart';
+import 'package:marvel_app/modules/comic-detail/comic_detail_viewModel.dart';
 
 class ComicDetailView extends StatefulWidget {
-  final int idComic;
-  const ComicDetailView({required this.idComic, super.key});
+  final IHttpClient httpClient;
+  final ComicDetailParameter param;
+  const ComicDetailView(
+      {required this.httpClient, required this.param, super.key});
 
   @override
   State<ComicDetailView> createState() => _ComicDetailViewState();
 }
 
 class _ComicDetailViewState extends State<ComicDetailView> {
-  ComicDetailViewModel viewModel =
-      ComicDetailViewModel(marvelService: MarvelService(client: HttpClient()));
+  late ComicDetailViewModel viewModel;
+  late Object? parameter;
 
   @override
   void initState() {
-    viewModel.init(widget.idComic);
+    viewModel = ComicDetailViewModel(
+      marvelService: MarvelService(
+        client: widget.httpClient,
+      ),
+    );
+
+    viewModel.init(widget.param.idComic);
+
     super.initState();
   }
 

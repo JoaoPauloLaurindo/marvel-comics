@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:marvel_app/services/marvel_service.dart';
-import '../viewModels/home_viewmodel.dart';
-import '../services/http_service.dart';
+import 'home_viewmodel.dart';
+import '../../services/http_service.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  final IHttpClient client;
+
+  const HomeView({required this.client, super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
-  HomeViewModel viewModel =
-      HomeViewModel(marvelService: MarvelService(client: HttpClient()));
+  late HomeViewModel viewModel;
 
   @override
   void initState() {
+    viewModel =
+        HomeViewModel(marvelService: MarvelService(client: widget.client));
     viewModel.init();
+
     super.initState();
   }
 
