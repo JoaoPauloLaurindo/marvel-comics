@@ -9,4 +9,6 @@ class HomeModel extends ChangeNotifier {
       ValueNotifier<List<ComicResponseDto>>([]);
 
   ValueNotifier<bool> isBusy = ValueNotifier<bool>(false);
+
+  ValueNotifier<int> currentPage = ValueNotifier<int>(0);
 }

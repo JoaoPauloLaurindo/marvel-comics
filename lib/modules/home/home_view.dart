@@ -13,21 +13,34 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late HomeViewModel viewModel;
+  late final HomeViewModel _viewModel;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
-    viewModel =
-        HomeViewModel(marvelService: MarvelService(client: widget.client));
-    viewModel.init();
-
     super.initState();
+
+    _scrollController = ScrollController();
+    _scrollController.addListener(infiniteScrolling);
+
+    _viewModel =
+        HomeViewModel(marvelService: MarvelService(client: widget.client));
+    _viewModel.init();
   }
 
   @override
   void dispose() {
-    viewModel.dispose();
     super.dispose();
+    _viewModel.dispose();
+    _scrollController.dispose();
+  }
+
+  infiniteScrolling() {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !_viewModel.homeModel.isBusy.value) {
+      _viewModel.loadComics();
+    }
   }
 
   showSearchBox(BuildContext context) {
@@ -52,7 +65,8 @@ class _HomeViewState extends State<HomeView> {
             child: Center(
               child: TextField(
                 keyboardType: TextInputType.text,
-                onSubmitted: (value) async => await viewModel.filterList(value),
+                onSubmitted: (value) async =>
+                    await _viewModel.filterList(value),
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Pesquisa',
@@ -67,12 +81,12 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: viewModel.homeModel.listFilterComics,
-      builder: (context, item, _) {
-        final list = viewModel.homeModel.listFilterComics.value;
+    return AnimatedBuilder(
+      animation: _viewModel.homeModel.listFilterComics,
+      builder: (context, item) {
+        final list = _viewModel.homeModel.listFilterComics.value;
 
-        if (viewModel.homeModel.isBusy.value) {
+        if (_viewModel.homeModel.isBusy.value) {
           return Container(
             color: Colors.lightBlue[400],
             child: const Center(
@@ -92,7 +106,7 @@ class _HomeViewState extends State<HomeView> {
                 visible: list.isEmpty,
                 child: IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () => viewModel.refreshList(),
+                  onPressed: () => _viewModel.refreshList(),
                 ),
               ),
               IconButton(
@@ -102,46 +116,66 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           backgroundColor: Colors.lightBlue[400],
-          body: ListView.builder(
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: InkWell(
-                  onTap: () =>
-                      viewModel.navigateToDetail(context, list[index].id),
-                  child: Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                      image: DecorationImage(
-                        image: NetworkImage(list[index].thumbnail.fullUrl),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8.0),
-                            color: Colors.white,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              list[index].title,
-                              style: const TextStyle(color: Colors.black),
-                            ),
+          body: Stack(
+            children: <Widget>[
+              ListView.builder(
+                controller: _scrollController,
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: InkWell(
+                      onTap: () =>
+                          _viewModel.navigateToDetail(context, list[index].id),
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          image: DecorationImage(
+                            image: NetworkImage(list[index].thumbnail.fullUrl),
+                            fit: BoxFit.cover,
                           ),
                         ),
-                      ],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8.0),
+                                color: Colors.white,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  list[index].title,
+                                  style: const TextStyle(color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              Visibility(
+                visible: _viewModel.homeModel.isBusy.value,
+                child: Positioned(
+                  left: (MediaQuery.of(context).size.width / 2) - 20,
+                  bottom: 24,
+                  child: Container(
+                    color: Colors.lightBlue[400],
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.red,
+                      ),
                     ),
                   ),
                 ),
-              );
-            },
+              )
+            ],
           ),
         );
       },

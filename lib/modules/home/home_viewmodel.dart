@@ -17,7 +17,16 @@ class HomeViewModel extends ChangeNotifier {
     try {
       homeModel.isBusy.value = true;
       var response = await marvelService.getComics();
-      homeModel.listComics.value = homeModel.listFilterComics.value = response;
+
+      //homeModel.listComics.value.addAll(response);
+
+      // for (var i = 0; i < response.length; i++) {
+      //   homeModel.listFilterComics.value.add(response[i]);
+      // }
+
+      homeModel.listFilterComics.value = response;
+
+      homeModel.currentPage.value += 10;
       homeModel.isBusy.value = false;
 
       notifyListeners();
