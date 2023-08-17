@@ -3,13 +3,14 @@ import 'package:marvel_app/modules/comic-detail/comic_detail_parameter.dart';
 import 'home_model.dart';
 import '../../services/marvel_service.dart';
 
-class HomeViewModel extends ChangeNotifier {
+class HomeViewModel {
   late IMarvelService marvelService;
-  HomeModel homeModel = HomeModel();
+  late final HomeModel homeModel;
 
   HomeViewModel({required this.marvelService});
 
   void init() async {
+    homeModel = HomeModel();
     await loadComics();
   }
 
@@ -18,18 +19,15 @@ class HomeViewModel extends ChangeNotifier {
       homeModel.isBusy.value = true;
       var response = await marvelService.getComics();
 
-      //homeModel.listComics.value.addAll(response);
-
-      // for (var i = 0; i < response.length; i++) {
-      //   homeModel.listFilterComics.value.add(response[i]);
-      // }
-
-      homeModel.listFilterComics.value = response;
+      for (var i = 0; i < response.length; i++) {
+        homeModel.listFilterComics.value.add(response[i]);
+        homeModel.listComics.value.add(response[i]);
+      }
 
       homeModel.currentPage.value += 10;
       homeModel.isBusy.value = false;
 
-      notifyListeners();
+      homeModel.save();
     } catch (e) {
       throw 'Houve um erro!';
     }
@@ -44,16 +42,15 @@ class HomeViewModel extends ChangeNotifier {
       homeModel.listFilterComics.value = filter;
       homeModel.isBusy.value = false;
 
-      notifyListeners();
+      homeModel.save();
     } catch (e) {
       throw 'Houve um erro: $e';
     }
   }
 
-  refreshList() {
-    homeModel.listFilterComics.value = homeModel.listComics.value;
-
-    notifyListeners();
+  refreshList() async {
+    homeModel.currentPage.value = 1;
+    await loadComics();
   }
 
   navigateToDetail(BuildContext context, int idComic) async {

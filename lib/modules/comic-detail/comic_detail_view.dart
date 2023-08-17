@@ -32,12 +32,6 @@ class _ComicDetailViewState extends State<ComicDetailView> {
   }
 
   @override
-  void dispose() {
-    viewModel.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
       valueListenable: viewModel.comicModel.comic,

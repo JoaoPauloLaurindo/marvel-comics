@@ -31,7 +31,6 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     super.dispose();
-    _viewModel.dispose();
     _scrollController.dispose();
   }
 
@@ -82,11 +81,11 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _viewModel.homeModel.listFilterComics,
+      animation: _viewModel.homeModel,
       builder: (context, item) {
         final list = _viewModel.homeModel.listFilterComics.value;
 
-        if (_viewModel.homeModel.isBusy.value) {
+        if (_viewModel.homeModel.isBusy.value && list.isEmpty) {
           return Container(
             color: Colors.lightBlue[400],
             child: const Center(

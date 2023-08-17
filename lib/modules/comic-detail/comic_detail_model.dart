@@ -6,4 +6,8 @@ class ComicDetailModel extends ChangeNotifier {
       ValueNotifier<ComicResponseDto>(ComicResponseDto.empty());
 
   ValueNotifier<bool> isBusy = ValueNotifier<bool>(false);
+
+  void save() {
+    notifyListeners();
+  }
 }
