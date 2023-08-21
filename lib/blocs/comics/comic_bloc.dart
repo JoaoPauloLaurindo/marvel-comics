@@ -12,7 +12,9 @@ import '../../services/marvel_service.dart';
 import 'states/comic_state.dart';
 
 class ComicBloc {
-  final IMarvelService _marvelService = MarvelService(client: HttpClient());
+  final IHttpClient client;
+
+  late final IMarvelService _marvelService;
 
   final StreamController<ComicEvent> _inputComicController =
       StreamController<ComicEvent>();
@@ -22,7 +24,8 @@ class ComicBloc {
   Sink<ComicEvent> get inputComic => _inputComicController.sink;
   Stream<ComicState> get stream => _outputComicController.stream;
 
-  ComicBloc() {
+  ComicBloc({required this.client}) {
+    _marvelService = MarvelService(client: client);
     _inputComicController.stream.listen(_mapEventToState);
   }
 

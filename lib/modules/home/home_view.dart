@@ -23,7 +23,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    comicBloc = ComicBloc();
+    comicBloc = ComicBloc(client: widget.client);
     comicBloc.inputComic.add(LoadComicsEvent());
 
     _viewModel = HomeViewModel();
