@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:marvel_app/services/marvel_service.dart';
-import 'home_viewmodel.dart';
+import 'package:marvel_app/blocs/comics/comic_bloc.dart';
+import 'package:marvel_app/blocs/comics/events/filter_comic_event.dart';
+import 'package:marvel_app/blocs/comics/events/load_comics_event.dart';
+import 'package:marvel_app/modules/home/home_viewmodel.dart';
+import '../../services/dto/response/comic_response_dto.dart';
 import '../../services/http_service.dart';
 
 class HomeView extends StatefulWidget {
@@ -14,35 +17,37 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   late final HomeViewModel _viewModel;
+  late final ComicBloc comicBloc;
   late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    comicBloc = ComicBloc(client: widget.client);
+    comicBloc.inputComic.add(LoadComicsEvent());
+
+    _viewModel = HomeViewModel();
+    _viewModel.init();
 
     _scrollController = ScrollController();
     _scrollController.addListener(infiniteScrolling);
-
-    _viewModel =
-        HomeViewModel(marvelService: MarvelService(client: widget.client));
-    _viewModel.init();
   }
 
   @override
   void dispose() {
     super.dispose();
+    comicBloc.inputComic.close();
     _scrollController.dispose();
   }
 
   infiniteScrolling() {
     if (_scrollController.position.pixels ==
-            _scrollController.position.maxScrollExtent &&
-        !_viewModel.homeModel.isBusy.value) {
-      _viewModel.loadComics();
+        _scrollController.position.maxScrollExtent) {
+      comicBloc.inputComic.add(LoadComicsEvent());
     }
   }
 
-  showSearchBox(BuildContext context) {
+  showSearchBox(BuildContext context, List<ComicResponseDto> list) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext ctx) {
@@ -64,8 +69,12 @@ class _HomeViewState extends State<HomeView> {
             child: Center(
               child: TextField(
                 keyboardType: TextInputType.text,
-                onSubmitted: (value) async =>
-                    await _viewModel.filterList(value),
+                onSubmitted: (value) => comicBloc.inputComic.add(
+                  FilterComicEvent(
+                    term: value,
+                    listComics: list,
+                  ),
+                ),
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Pesquisa',
@@ -80,12 +89,12 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _viewModel.homeModel,
-      builder: (context, item) {
-        final list = _viewModel.homeModel.listFilterComics.value;
+    return StreamBuilder(
+      stream: comicBloc.stream,
+      builder: (context, snapshot) {
+        final list = snapshot.data?.comics ?? [];
 
-        if (_viewModel.homeModel.isBusy.value && list.isEmpty) {
+        if (list.isEmpty) {
           return Container(
             color: Colors.lightBlue[400],
             child: const Center(
@@ -105,12 +114,12 @@ class _HomeViewState extends State<HomeView> {
                 visible: list.isEmpty,
                 child: IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () => _viewModel.refreshList(),
+                  onPressed: () => comicBloc.inputComic.add(LoadComicsEvent()),
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.search),
-                onPressed: () => showSearchBox(context),
+                onPressed: () => showSearchBox(context, list),
               ),
             ],
           ),
