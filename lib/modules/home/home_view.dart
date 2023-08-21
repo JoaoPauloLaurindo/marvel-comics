@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:marvel_app/blocs/comics/comic_bloc.dart';
 import 'package:marvel_app/blocs/comics/events/filter_comic_event.dart';
 import 'package:marvel_app/blocs/comics/events/load_comics_event.dart';
+import 'package:marvel_app/blocs/comics/states/comic_initial_state.dart';
 import 'package:marvel_app/modules/home/home_viewmodel.dart';
+import '../../blocs/comics/states/comic_state.dart';
 import '../../services/dto/response/comic_response_dto.dart';
 import '../../services/http_service.dart';
 
@@ -24,7 +27,7 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     comicBloc = ComicBloc(client: widget.client);
-    comicBloc.inputComic.add(LoadComicsEvent());
+    comicBloc.add(LoadComicsEvent());
 
     _viewModel = HomeViewModel();
     _viewModel.init();
@@ -36,14 +39,14 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     super.dispose();
-    comicBloc.inputComic.close();
+    comicBloc.close();
     _scrollController.dispose();
   }
 
   infiniteScrolling() {
     if (_scrollController.position.pixels ==
         _scrollController.position.maxScrollExtent) {
-      comicBloc.inputComic.add(LoadComicsEvent());
+      comicBloc.add(LoadComicsEvent());
     }
   }
 
@@ -69,7 +72,7 @@ class _HomeViewState extends State<HomeView> {
             child: Center(
               child: TextField(
                 keyboardType: TextInputType.text,
-                onSubmitted: (value) => comicBloc.inputComic.add(
+                onSubmitted: (value) => comicBloc.add(
                   FilterComicEvent(
                     term: value,
                     listComics: list,
@@ -89,12 +92,10 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: comicBloc.stream,
-      builder: (context, snapshot) {
-        final list = snapshot.data?.comics ?? [];
-
-        if (list.isEmpty) {
+    return BlocBuilder<ComicBloc, ComicState>(
+      bloc: comicBloc,
+      builder: (context, state) {
+        if (state is ComicInitialState) {
           return Container(
             color: Colors.lightBlue[400],
             child: const Center(
@@ -105,6 +106,8 @@ class _HomeViewState extends State<HomeView> {
           );
         }
 
+        final list = state.comics;
+
         return Scaffold(
           appBar: AppBar(
             title: const Center(child: Text('Comics')),
@@ -114,7 +117,7 @@ class _HomeViewState extends State<HomeView> {
                 visible: list.isEmpty,
                 child: IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () => comicBloc.inputComic.add(LoadComicsEvent()),
+                  onPressed: () => comicBloc.add(LoadComicsEvent()),
                 ),
               ),
               IconButton(

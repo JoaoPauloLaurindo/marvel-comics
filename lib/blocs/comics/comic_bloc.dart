@@ -1,9 +1,8 @@
-import 'dart:async';
-
+import 'package:bloc/bloc.dart';
 import 'package:marvel_app/blocs/comics/events/comic_event.dart';
 import 'package:marvel_app/blocs/comics/events/filter_comic_event.dart';
-import 'package:marvel_app/blocs/comics/events/load_comic_event.dart';
 import 'package:marvel_app/blocs/comics/events/load_comics_event.dart';
+import 'package:marvel_app/blocs/comics/states/comic_initial_state.dart';
 import 'package:marvel_app/blocs/comics/states/comic_success_state.dart';
 import 'package:marvel_app/services/dto/response/comic_response_dto.dart';
 import 'package:marvel_app/services/http_service.dart';
@@ -11,38 +10,30 @@ import 'package:marvel_app/services/http_service.dart';
 import '../../services/marvel_service.dart';
 import 'states/comic_state.dart';
 
-class ComicBloc {
+class ComicBloc extends Bloc<ComicEvent, ComicState> {
   final IHttpClient client;
 
   late final IMarvelService _marvelService;
 
-  final StreamController<ComicEvent> _inputComicController =
-      StreamController<ComicEvent>();
-  final StreamController<ComicState> _outputComicController =
-      StreamController<ComicState>();
-
-  Sink<ComicEvent> get inputComic => _inputComicController.sink;
-  Stream<ComicState> get stream => _outputComicController.stream;
-
-  ComicBloc({required this.client}) {
+  ComicBloc({required this.client}) : super(ComicInitialState()) {
     _marvelService = MarvelService(client: client);
-    _inputComicController.stream.listen(_mapEventToState);
-  }
 
-  _mapEventToState(ComicEvent event) async {
-    List<ComicResponseDto> comics = [];
+    on<LoadComicsEvent>(
+      (event, emit) async =>
+          emit(ComicSuccessState(comics: await _marvelService.getComics())),
+    );
+    on<FilterComicEvent>(
+      (event, emit) {
+        List<ComicResponseDto> comics = [];
 
-    if (event is LoadComicsEvent) {
-      comics = await _marvelService.getComics();
-    } else if (event is LoadComicEvent) {
-      comics.add(event.comic);
-    } else if (event is FilterComicEvent) {
-      comics = event.listComics
-          .where((element) => element.title.contains(event.term))
-          .toList();
-    }
-    //TO-DO: Fazer implementação de favoritos
+        if (event.listComics.isNotEmpty) {
+          comics = event.listComics
+              .where((element) => element.title.contains(event.term))
+              .toList();
+        }
 
-    _outputComicController.add(ComicSuccessState(comics: comics));
+        emit(ComicSuccessState(comics: comics));
+      },
+    );
   }
 }
